@@ -5,9 +5,15 @@ name = "pypi"
 
 [packages]
 openai = "*"
+azure-identity = "*"
+azure-keyvault-secrets = "*"
+backoff = "*"
+rouge = "*"
+nltk = "*"
+pandas = "*"
 gtts = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.11"
+python_version = "3.*"
