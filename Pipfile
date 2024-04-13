@@ -8,6 +8,9 @@ openai = "*"
 azure-identity = "*"
 azure-keyvault-secrets = "*"
 backoff = "*"
+rouge = "*"
+nltk = "*"
+pandas = "*"
 
 [dev-packages]
 
