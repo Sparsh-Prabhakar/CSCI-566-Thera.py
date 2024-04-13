@@ -25,4 +25,3 @@ def transcribe_audio(file_path):
     return transcription.text
 if __name__=='__main__':
     print(transcribe_audio('output.wav'))
-    #test comment
