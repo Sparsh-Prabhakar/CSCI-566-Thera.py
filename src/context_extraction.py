@@ -64,11 +64,12 @@ def bucket_flow(message, notes, context ,model='gpt35turbotejas',n=1):
     return emotions, reasons
 
 
-message = "Hello"
+if __name__ == '__main__':
+    message = "Hello"
 
-output = {}
+    output = {}
 
-output['notes'], output['contexts'] = extract_context_flow(message)
-output['emotions'], output['reasons'] = bucket_flow(message,output['notes'][0],output['contexts'][0])
+    output['notes'], output['contexts'] = extract_context_flow(message)
+    output['emotions'], output['reasons'] = bucket_flow(message, output['notes'][0], output['contexts'][0])
 
-pprint.pprint(output)
+    pprint.pprint(output)
