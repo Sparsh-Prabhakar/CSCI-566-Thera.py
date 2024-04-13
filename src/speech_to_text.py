@@ -3,7 +3,7 @@ from scipy.io.wavfile import write
 import openai
 from config import *
 
-def record_audio(filename, duration=5, fs=44100):
+def record_audio(filename, duration=35, fs=44100):
     print("Recording...")
     try:
         # Record from the microphone with mono output
@@ -16,7 +16,7 @@ def record_audio(filename, duration=5, fs=44100):
 
 client = openai.OpenAI(api_key= api_key)
 def transcribe_audio(file_path):
-    record_audio(file_path,duration=5)
+    record_audio(file_path,duration=35)
     with open("output.wav", "rb") as audio_file:
         transcription = client.audio.transcriptions.create(
             model="whisper-1", 
