@@ -1,5 +1,5 @@
-from getGPT import *
-from prompts.context_extraction import *
+from src.getGPT import *
+from src.prompts.context_extraction import *
 import pprint
 
 

@@ -1,7 +1,7 @@
 from openai import OpenAI
 import os 
 import re
-from prompts.instruction import *
+from src.prompts.instruction import *
 from config import *
 
 
@@ -9,6 +9,8 @@ def get_client():
   client = OpenAI(
     api_key= api_key  # this is also the default, it can be omitted
   )
+
+  return client
 
 
 
@@ -40,9 +42,9 @@ def get_response(user_input,output):
 
     # Split text at each number using regular expressions
     sentences = re.split(r"\d+\.", response.strip())
-    sentences= sentences[0].split("\n")
+    # sentences= sentences[0].split("\n")
 
-    return sentences
+    return sentences[1:]
 
 
 if __name__ == "__main__":
