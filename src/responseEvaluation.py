@@ -1,8 +1,9 @@
 import json
 import math
 import pandas as pd
-from nltk.translate.bleu_score import sentence_bleu
-from rouge import Rouge
+# from nltk.translate.bleu_score import sentence_bleu
+# from rouge import Rouge
+import numpy as np
 
 def evaluateMultipleResponses(context, responses):
 
@@ -23,7 +24,7 @@ def evaluateMultipleResponses(context, responses):
         result = evaluateResponse(context, response)
         validResponse = False
         for criteria, valueRange in threshold.items():
-            if result[criteria] in valueRange:
+            if result[criteria] >= valueRange[0] and result[criteria] <= valueRange[1]:
                 validResponse = True
         if validResponse:
             validResponsesPerformance.append([result["perplexity"], result["bleu"], result["rogue"], result["f1"]])
@@ -85,41 +86,107 @@ def calculatePerplexity(response):
     perplexity = 2 ** (-log_sum / len(words))
     return perplexity
 
+# def calculateBLEUscore(df, context, response):
+#     reference_texts = df['Combined'].tolist()
+#     test_combined = context + " " + response
+#     # bleu_score = sentence_bleu(reference_texts, test_combined)
+#     bleu_score = sacrebleu.corpus_bleu(test_combined, [reference_texts])
+#     return bleu_score
+
 def calculateBLEUscore(df, context, response):
     reference_texts = df['Combined'].tolist()
     test_combined = context + " " + response
-    bleu_score = sentence_bleu(reference_texts, test_combined)
+    reference_tokens = [ref.split() for ref in reference_texts]
+    test_tokens = test_combined.split()
+    precisions = []
+    for n in range(1, 5):
+        reference_ngrams = [tuple(ref_tokens[i:i + n]) for ref_tokens in reference_tokens for i in range(len(ref_tokens) - n + 1)]
+        test_ngrams = [tuple(test_tokens[i:i + n]) for i in range(len(test_tokens) - n + 1)]
+        matching_ngrams = len([ngram for ngram in test_ngrams if ngram in reference_ngrams])
+        if len(test_ngrams) > 0:
+            precision = matching_ngrams / len(test_ngrams)
+            precisions.append(precision)
+    if len(precisions) == 0:
+        return 0.0
+    bleu_score = np.exp(np.mean(np.log(precisions)))
     return bleu_score
 
+# def calculateROUGEandF1score(df, context, response):
+#     rouge = Rouge()
+#     reference_texts = "\n".join(df['Combined'].tolist())
+#     test_combined = context + " " + response
+#     rouge_scores = rouge.get_scores(test_combined, reference_texts)
+#     rouge_1_p = []
+#     rouge_2_p = []
+#     rouge_l_p = []
+    # for score in rouge_scores:
+    #     rouge_1_p.append(score['rouge-1']['p'])
+    #     rouge_2_p.append(score['rouge-2']['p'])
+    #     rouge_l_p.append(score['rouge-l']['p'])
+    # average_rouge_1_p = sum(rouge_1_p) / len(rouge_1_p)
+    # average_rouge_2_p = sum(rouge_2_p) / len(rouge_2_p)
+    # average_rouge_l_p = sum(rouge_l_p) / len(rouge_l_p)
+    # overall_rouge_p = (average_rouge_1_p + average_rouge_2_p + average_rouge_l_p) / 3
+    # rouge_1_f = []
+    # rouge_2_f = []
+    # rouge_l_f = []
+    # for score in rouge_scores:
+    #     rouge_1_f.append(score['rouge-1']['f'])
+    #     rouge_2_f.append(score['rouge-2']['f'])
+    #     rouge_l_f.append(score['rouge-l']['f'])
+    # average_rouge_1_f = sum(rouge_1_f) / len(rouge_1_f)
+    # average_rouge_2_f = sum(rouge_2_f) / len(rouge_2_f)
+    # average_rouge_l_f = sum(rouge_l_f) / len(rouge_l_f)
+    # overall_rouge_f = (average_rouge_1_f + average_rouge_2_f + average_rouge_l_f) / 3
+    # return overall_rouge_p, overall_rouge_f
+
 def calculateROUGEandF1score(df, context, response):
-    rouge = Rouge()
     reference_texts = "\n".join(df['Combined'].tolist())
     test_combined = context + " " + response
-    rouge_scores = rouge.get_scores(test_combined, reference_texts)
-    rouge_1_p = []
-    rouge_2_p = []
-    rouge_l_p = []
-    for score in rouge_scores:
-        rouge_1_p.append(score['rouge-1']['p'])
-        rouge_2_p.append(score['rouge-2']['p'])
-        rouge_l_p.append(score['rouge-l']['p'])
-    average_rouge_1_p = sum(rouge_1_p) / len(rouge_1_p)
-    average_rouge_2_p = sum(rouge_2_p) / len(rouge_2_p)
-    average_rouge_l_p = sum(rouge_l_p) / len(rouge_l_p)
-    overall_rouge_p = (average_rouge_1_p + average_rouge_2_p + average_rouge_l_p) / 3
-    rouge_1_f = []
-    rouge_2_f = []
-    rouge_l_f = []
-    for score in rouge_scores:
-        rouge_1_f.append(score['rouge-1']['f'])
-        rouge_2_f.append(score['rouge-2']['f'])
-        rouge_l_f.append(score['rouge-l']['f'])
-    average_rouge_1_f = sum(rouge_1_f) / len(rouge_1_f)
-    average_rouge_2_f = sum(rouge_2_f) / len(rouge_2_f)
-    average_rouge_l_f = sum(rouge_l_f) / len(rouge_l_f)
-    overall_rouge_f = (average_rouge_1_f + average_rouge_2_f + average_rouge_l_f) / 3
+    reference_tokens = [ref.split() for ref in reference_texts]
+    test_tokens = test_combined.split()
+    rouge_1_p = calculate_rouge_n_precision(reference_tokens, test_tokens, n=1)
+    rouge_2_p = calculate_rouge_n_precision(reference_tokens, test_tokens, n=2)
+    rouge_l_p = calculate_rouge_l_precision(reference_tokens, test_tokens)
+    rouge_1_r = calculate_rouge_n_recall(reference_tokens, test_tokens, n=1)
+    rouge_2_r = calculate_rouge_n_recall(reference_tokens, test_tokens, n=2)
+    rouge_l_r = calculate_rouge_l_recall(reference_tokens, test_tokens)
+    rouge_1_f = calculate_rouge_f1_score(rouge_1_p, rouge_1_r)
+    rouge_2_f = calculate_rouge_f1_score(rouge_2_p, rouge_2_r)
+    rouge_l_f = calculate_rouge_f1_score(rouge_l_p, rouge_l_r)
+    overall_rouge_p = np.mean([rouge_1_p, rouge_2_p, rouge_l_p])
+    overall_rouge_f = np.mean([rouge_1_f, rouge_2_f, rouge_l_f])
     return overall_rouge_p, overall_rouge_f
 
+def calculate_rouge_n_precision(reference_tokens, test_tokens, n):
+    ngrams_reference = get_ngrams(reference_tokens, n)
+    ngrams_test = get_ngrams(test_tokens, n)
+    count_intersection = len([ngram for ngram in ngrams_reference if ngram in ngrams_test])
+    return count_intersection / len(ngrams_reference) if len(ngrams_reference) > 0 else 0.0
+
+def calculate_rouge_n_recall(reference_tokens, test_tokens, n):
+    ngrams_reference = get_ngrams(reference_tokens, n)
+    ngrams_test = get_ngrams(test_tokens, n)
+    count_intersection = len([ngram for ngram in ngrams_test if ngram in ngrams_reference])
+    return count_intersection / len(ngrams_reference) if len(ngrams_reference) > 0 else 0.0
+
+def calculate_rouge_l_precision(reference_tokens, test_tokens):
+    reference_set = set(map(tuple, reference_tokens))
+    test_set = set(map(tuple, test_tokens))
+    count_intersection = len([ref_token for ref_token in reference_tokens if tuple(ref_token) in test_set])
+    return count_intersection / len(reference_tokens) if len(reference_tokens) > 0 else 0.0
+
+def calculate_rouge_l_recall(reference_tokens, test_tokens):
+    reference_set = set(map(tuple, reference_tokens))
+    test_set = set(map(tuple, test_tokens))
+    count_intersection = len([test_token for test_token in test_tokens if tuple(test_token) in reference_set])
+    return count_intersection / len(test_tokens) if len(test_tokens) > 0 else 0.0
+
+def calculate_rouge_f1_score(precision, recall):
+    return 2 * ((precision * recall) / (precision + recall)) if (precision + recall) > 0 else 0.0
+
+def get_ngrams(tokens, n):
+    return [tuple(tokens[i:i+n]) for i in range(len(tokens) - n + 1)]
 
 
 if __name__ == "__main__":
