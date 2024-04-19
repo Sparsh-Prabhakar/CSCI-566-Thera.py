@@ -15,7 +15,7 @@ def record_audio(filename, duration=5, fs=44100):
     except Exception as e:
         print(f"An error occurred during recording: {e}")
 
-client = openai.OpenAI(api_key= api_key)
+client = azure_client #openai.OpenAI(api_key= api_key) 
 def transcribe_audio(file_path):
     record_audio(file_path,duration=5)
     with open("output.wav", "rb") as audio_file:

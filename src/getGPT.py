@@ -16,7 +16,7 @@ openai.api_type = 'azure'
 openai.api_version = "2024-02-15-preview"
 
 # Pulling the keyvault api key for Azure OpenAI
-api_key = client_vault.get_secret("ApiKey").value
+api_key = client_vault.get_secret("ApiKey2").value
 if api_key != "":
     openai.api_key = api_key
 else:
@@ -25,7 +25,7 @@ print(api_key)
 
 
 # Pulling the keyvault base url for Azure OpenAI
-api_base = client_vault.get_secret("BaseURL").value
+api_base = client_vault.get_secret("BaseURL2").value
 if api_base != "":
     print("Warning: OPENAI_API_BASE is set to {}".format(api_base))
     openai.base_url = api_base
