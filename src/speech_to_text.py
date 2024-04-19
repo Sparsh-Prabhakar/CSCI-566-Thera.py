@@ -2,6 +2,7 @@ import sounddevice as sd
 from scipy.io.wavfile import write
 import openai
 from config import *
+from src.getGPT import *
 
 def record_audio(filename, duration=5, fs=44100):
     print("Recording...")

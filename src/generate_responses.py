@@ -4,6 +4,8 @@ import re
 from src.prompts.instruction import *
 from config import *
 
+from src.getGPT import *
+
 
 def get_client():
   client = OpenAI(
@@ -16,8 +18,8 @@ def get_client():
 
 def interpret_instructions_with_gpt(prompt,client):
     response = client.chat.completions.create(
-        #model="gpt-3.5-turbo",
-        model = "gpt-3.5-turbo-0125",
+        model="gpt35turbotejas",
+        # model = "gpt-3.5-turbo-0125",
         messages = [{"role": "user", "content" : prompt }],
         temperature=0.5,
         max_tokens=1000,
@@ -34,7 +36,7 @@ def get_response(user_input,output):
     #instructions = "Generate 5 responses as a mental health therapist, make sure end with a question. for the following input:"
     #prompt = instructions + "\n" + text
 
-    client = get_client()
+    client = azure_client# get_client()
     instruction = get_instruction_prompt_wrap(output['contexts'][0],output['emotions'][0], output['reasons'][0], user_input )
 
     response = interpret_instructions_with_gpt(instruction,client)
