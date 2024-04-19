@@ -17,7 +17,7 @@ def record_audio(filename, duration=5, fs=44100):
 
 client = azure_client #openai.OpenAI(api_key= api_key) 
 def transcribe_audio(file_path):
-    record_audio(file_path,duration=5)
+    record_audio(file_path,duration=35)
     with open("output.wav", "rb") as audio_file:
         transcription = client.audio.transcriptions.create(
             model="whisper-1", 
